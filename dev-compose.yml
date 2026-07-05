@@ -1,0 +1,17 @@
+services:
+  client:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8890:8890"
+    env_file: ./build/.env
+    volumes:
+      - ./build:/app
+      - db-data:/data          # SQLite lives here, NOT on the ./build bind mount —
+                               # modernc sqlite locking fails on macOS virtiofs (CANTOPEN).
+      - go-cache:/root/go/pkg/mod
+
+volumes:
+  go-cache:
+  db-data:

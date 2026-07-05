@@ -1,0 +1,7 @@
+<!-- nom-nom — a two-ring donut (the hero shape) with a bite out of it. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nom-nom">
+  <rect width="64" height="64" rx="15" fill="#211C18"/>
+  <circle cx="32" cy="33" r="19" fill="none" stroke="#B43E2C" stroke-width="9"/>
+  <circle cx="32" cy="33" r="9"  fill="none" stroke="#BE8A60" stroke-width="5"/>
+  <circle cx="17" cy="17" r="8.5" fill="#211C18"/>
+</svg>

@@ -1,0 +1,13 @@
+go/.env
+TASK.md
+CLAUDE.md
+go/data/
+
+go/tmp/
+.DS_Store
+.claude/ 
+
+*.env
+build/.env
+skeleton
+old-version

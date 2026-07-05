@@ -1,0 +1,21 @@
+services:
+  release:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./bin:/out
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        cp /nom-nom /out/nom-nom
+        printf "\033[1;32m\n"
+        printf "  ╔══════════════════════════════════╗\n"
+        printf "  ║        NOM-NOM PROD BUILD        ║\n"
+        printf "  ║  Built: %-25s║\n" "$(/out/nom-nom --version | sed 's/nom-nom built: //')"
+        printf "  ╚══════════════════════════════════╝\n"
+        printf "\033[0m\n"
+
+
+# docker compose -f prod-compose.yml build --no-cache && docker compose -f prod-compose.yml up

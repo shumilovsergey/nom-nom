@@ -1,0 +1,12 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "mkdir -p /tmp/airbuild && go build -o /tmp/airbuild/nom-nom ."
+  bin = "/tmp/airbuild/nom-nom"
+  include_ext = ["go", "js", "css", "html", "svg"]
+  exclude_dir = ["bin", "data", "tmp"]
+  delay = 200
+
+[misc]
+  clean_on_exit = true

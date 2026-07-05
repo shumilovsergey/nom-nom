@@ -1,0 +1,23 @@
+[Unit]
+Description=food-scaner (food scanner)
+After=network.target
+
+[Service]
+User=root
+ExecStart=/opt/food-scaner/bin/food-scaner
+WorkingDirectory=/opt/food-scaner
+Environment=DB_PATH=/opt/food-scaner/food-scaner.db
+Environment=PORT=8890
+Environment=AUTH_URL=https://auth-center.sh-development.ru
+Environment=AUTH_INTERNAL=http://localhost:8886
+Environment=APP_URL=https://food-scaner.sh-development.ru
+Environment=APP_TOKEN=
+Environment=SECRET_KEY=
+Environment=ANTHROPIC_API_KEY=
+Environment=SCAN_MODEL=claude-sonnet-4-6
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

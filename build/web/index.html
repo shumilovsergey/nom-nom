@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="nom-nom" />
+  <meta name="theme-color" content="#15110E" />
+  <title>nom-nom</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="nom-nom" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+{{if .Error}}
+<div class="error-banner">{{.Error}}</div>
+{{end}}
+
+{{if .User}}
+{{$name := .User.Name}}{{if not $name}}{{$name = .User.AuthID}}{{end}}
+<main class="screen">
+  <header class="header">
+    <nav class="nav-tabs" id="navTabs">
+      <button class="tab active" data-tab="scaner">Еда</button>
+      <button class="tab" data-tab="weight">Вес</button>
+      <button class="tab" data-tab="credits">Инфо</button>
+    </nav>
+
+    <div class="profile-area">
+      <button class="profile-btn" id="profileBtn" data-name="{{$name}}" aria-label="Account menu">
+        <span class="profile-initial">?</span>
+      </button>
+      <div class="profile-popover" id="profilePopover">
+        <div class="pi-info">
+          <span class="pi-label">{{.User.Method}}</span>
+          <span class="pi-name">{{$name}}</span>
+          {{if .User.Name}}<span class="pi-sub">{{.User.AuthID}}</span>{{end}}
+        </div>
+        <div class="pi-list">
+          <a class="pi-action" href="/apps">apps</a>
+          <a class="pi-action" href="https://github.com/shumilovsergey/nom-nom/blob/main/README.md" target="_blank" rel="noopener">readme</a>
+          <a class="pi-action pi-logout" href="/logout">выйти</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== SCANER panel ===== -->
+  <div id="panel-scaner" class="panel">
+    <!-- today's donut: total calories in the centre, protein as the accent arc -->
+    <section class="card donut" id="donut-card">
+      <button class="gear-btn" id="gear-btn" aria-label="Daily goals">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34 1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87 1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      </button>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="52" stroke-width="13"/>
+          <circle class="track" cx="60" cy="60" r="39" stroke-width="9"/>
+          <circle class="arc cal"  id="d-cal-arc"  cx="60" cy="60" r="52" stroke-width="13" stroke-dasharray="0 999"/>
+          <circle class="arc prot" id="d-prot-arc" cx="60" cy="60" r="39" stroke-width="9"  stroke-dasharray="0 999"/>
+          <!-- second lap — drawn on top when usage passes 100% of the goal -->
+          <circle class="arc cal-over"  id="d-cal-over"  cx="60" cy="60" r="52" stroke-width="13" stroke-dasharray="0 999"/>
+          <circle class="arc prot-over" id="d-prot-over" cx="60" cy="60" r="39" stroke-width="9"  stroke-dasharray="0 999"/>
+        </svg>
+        <div class="ring-center">
+          <span class="val" id="d-kcal">0</span>
+          <span class="unit">ккал сегодня</span>
+          <span class="prot-val"><b id="d-prot">0</b> г белка</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- input section: how a meal gets added -->
+    <section class="sources" id="sources">
+      <button class="source primary" data-src="manual" aria-label="Add manually">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        <span class="lbl">Вручную</span>
+      </button>
+      <button class="source" data-src="photo" aria-label="AI photo">
+        <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <span class="lbl">ИИ фото</span>
+      </button>
+      <button class="source" data-src="text" aria-label="AI text">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/><path d="M8 9h9"/><path d="M8 13h6"/></svg>
+        <span class="lbl">ИИ текст</span>
+      </button>
+      <button class="source" data-src="favorite" aria-label="Favorites">
+        <svg viewBox="0 0 24 24"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 21.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
+        <span class="lbl">Избранное</span>
+      </button>
+    </section>
+
+    <!-- today's meals; revealed on scroll -->
+    <section class="card history" id="history">
+      <div class="table-head"><span>За сегодня</span><span>ккал</span></div>
+      <div id="history-rows"></div>
+    </section>
+
+  </div><!-- /panel-scaner -->
+
+  <!-- ===== WEIGHT panel (skeleton/weight) — progress persists across all days ===== -->
+  <div id="panel-weight" class="panel" hidden>
+    <!-- a) period selector -->
+    <nav class="toggle" id="w-toggle">
+      <button class="active" data-period="week">Неделя</button>
+      <button data-period="month">Месяц</button>
+      <button data-period="year">Год</button>
+    </nav>
+
+    <!-- b) graph — grows to fill free space; scrub to inspect points -->
+    <section class="card graph" id="w-graph-card">
+      <svg id="w-chart">
+        <g id="w-grid"></g>
+        <polygon id="w-area" fill="var(--accent)" opacity="0.10" points=""/>
+        <polyline id="w-curve" fill="none" stroke="var(--accent)" stroke-width="2.5"
+                  stroke-linejoin="round" stroke-linecap="round" points=""/>
+        <g id="w-dots"></g>
+        <g id="w-selection"></g>
+      </svg>
+      <div class="graph-x" id="w-xaxis"></div>
+      <div class="tip" id="w-tip">
+        <div class="tip-date" id="w-tip-date"></div>
+        <div class="tip-val"><span class="tip-dot"></span><span id="w-tip-kg"></span></div>
+      </div>
+      <div class="w-nodata" id="w-nodata" hidden>Нет записей за этот период</div>
+    </section>
+
+    <!-- today: editable first "row", sits above the table head (task.md) -->
+    <section class="card">
+      <div class="today-label">
+        <h2>Вес сегодня</h2>
+        <span class="date" id="w-today-date">Сегодня</span>
+      </div>
+      <label class="input-wrap">
+        <input id="w-input" type="number" inputmode="decimal" step="0.1" placeholder="—" />
+        <span class="unit">кг</span>
+      </label>
+      <button class="save" id="w-save">Сохранить</button>
+    </section>
+
+    <!-- history — revealed on scroll; past rows editable via the extra Edit tap -->
+    <section class="card history" id="w-history">
+      <div class="table-head"><span>Дата</span><span>кг</span></div>
+      <div id="w-rows"></div>
+    </section>
+
+  </div><!-- /panel-weight -->
+
+  <!-- ===== CREDITS panel (filled from /api/state) ===== -->
+  <div id="panel-credits" class="panel" hidden>
+    <section class="card info-list">
+      <div class="info-row"><span class="info-k">Имя</span><span class="info-v">{{$name}}</span></div>
+      <div class="info-row"><span class="info-k">Ваш ID</span><span class="info-v">{{.User.AuthID}}</span></div>
+      <div class="info-row"><span class="info-k">Статус</span><span class="info-v" id="c-status">—</span></div>
+      <div class="info-row"><span class="info-k">Сканов сегодня</span><span class="info-v" id="c-uses">0</span></div>
+    </section>
+
+    <button class="save" id="buy-pro">Купить PRO</button>
+  </div>
+</main>
+
+<!-- ===== reusable meal card popup (add / edit) ===== -->
+<div class="overlay" id="overlay">
+  <div class="sheet" role="dialog" aria-label="Meal">
+    <div class="sheet-bar">
+      <button class="icon-btn" id="meal-close" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button class="icon-btn fav" id="meal-fav" aria-label="Add to favorite">
+        <svg viewBox="0 0 24 24"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 21.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
+      </button>
+    </div>
+
+    <input class="field-name" id="m-name" placeholder="Название" />
+    <div class="kcal-wrap">
+      <input id="m-kcal" type="number" inputmode="numeric" placeholder="0" />
+      <span class="unit">ккал</span>
+    </div>
+
+    <div class="sub-grid">
+      <div class="sub"><label>Граммы</label><input id="m-grams" type="number" inputmode="numeric" placeholder="0" /></div>
+      <div class="sub"><label>Белки</label><input id="m-prot" type="number" inputmode="decimal" placeholder="0" /></div>
+      <div class="sub"><label>Жиры</label><input id="m-fat" type="number" inputmode="decimal" placeholder="0" /></div>
+      <div class="sub"><label>Углеводы</label><input id="m-carb" type="number" inputmode="decimal" placeholder="0" /></div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="del-btn" id="meal-del" aria-label="Delete meal">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 4h4"/><path d="M6 7l1 13h10l1-13"/></svg>
+      </button>
+      <button class="save-btn" id="meal-save" aria-label="Save">nom-nom</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== buy-PRO popup (no shop yet — beta contacts) ===== -->
+<div class="overlay" id="overlay-pro">
+  <div class="sheet" role="dialog" aria-label="PRO">
+    <div class="sheet-bar">
+      <button class="icon-btn" data-close="overlay-pro" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="sheet-title">PRO</span>
+      <span style="width:42px"></span>
+    </div>
+    <p class="pro-text">
+      Магазина пока нет — проект nom-nom на бета-тестировании.
+      Если хочешь принять участие, свяжись со мной:
+    </p>
+    <div class="pi-list">
+      <a class="pi-action" href="https://t.me/sergey_showmelove" target="_blank" rel="noopener">
+        Telegram · @sergey_showmelove
+      </a>
+      <button class="pi-action" id="copy-email" type="button">
+        Email · wumilovsergey@gmail.com
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== daily goals popup (the gear) ===== -->
+<div class="overlay" id="overlay-goals">
+  <div class="sheet" role="dialog" aria-label="Daily goals">
+    <div class="sheet-bar">
+      <button class="icon-btn" data-close="overlay-goals" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="sheet-title">Цели на день</span>
+      <span style="width:42px"></span>
+    </div>
+    <div class="sub-grid">
+      <div class="sub"><label>Калории, ккал</label><input id="g-kcal" type="number" inputmode="numeric" placeholder="2000" /></div>
+      <div class="sub"><label>Белок, г</label><input id="g-prot" type="number" inputmode="numeric" placeholder="120" /></div>
+    </div>
+    <button class="save-btn" id="goals-save" aria-label="Save goals">nom-nom</button>
+  </div>
+</div>
+
+<!-- ===== AI text popup (describe a meal) ===== -->
+<div class="overlay" id="overlay-text">
+  <div class="sheet" role="dialog" aria-label="Describe meal">
+    <div class="sheet-bar">
+      <button class="icon-btn" data-close="overlay-text" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <textarea class="field-desc" id="text-desc" placeholder="Опиши блюдо…  например: «тарелка овсянки с бананом и мёдом»"></textarea>
+    <button class="save-btn" id="text-send" aria-label="Send">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ===== AI photo popup (camera mode) ===== -->
+<div class="overlay" id="overlay-photo">
+  <div class="sheet" role="dialog" aria-label="Photo meal">
+    <div class="sheet-bar">
+      <button class="icon-btn" data-close="overlay-photo" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="viewfinder" id="viewfinder">
+      <video id="cam" playsinline muted></video>
+      <div class="vf-fallback">
+        <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <span>Наведи камеру на еду</span>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <!-- gallery: pick an existing photo (same outlined-square shape as delete, neutral) -->
+      <label class="del-btn gallery" aria-label="Add from gallery">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <input type="file" id="photo-file" accept="image/*" hidden />
+      </label>
+      <button class="save-btn" id="photo-take" aria-label="Take photo">
+        <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== favorites picker popup ===== -->
+<div class="overlay" id="overlay-fav">
+  <div class="sheet" role="dialog" aria-label="Favorites">
+    <div class="sheet-bar">
+      <button class="icon-btn" data-close-fav aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="sheet-title">Избранное</span>
+      <span style="width:42px"></span>
+    </div>
+    <div class="fav-table">
+      <div class="fav-head"><span>Блюдо</span><span>Граммы</span><span>ккал</span></div>
+      <div class="fav-rows" id="fav-rows"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="del-btn" id="fav-del" aria-label="Delete favorite">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 4h4"/><path d="M6 7l1 13h10l1-13"/></svg>
+      </button>
+      <button class="save-btn" id="fav-accept" aria-label="Add selected">nom-nom</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== scan error popup ===== -->
+<div class="overlay" id="overlay-error">
+  <div class="sheet" role="alertdialog" aria-label="Error">
+    <p class="error-text" id="error-text">Упс, что-то пошло не так. Попробуй ещё раз позже.</p>
+    <button class="save" id="error-ok">Ок</button>
+  </div>
+</div>
+
+<!-- ===== full-screen loading — blocks everything while the AI scan runs ===== -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <span>Анализирую…</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+{{else}}
+
+<div class="login-screen">
+  <div class="login-card-wrap">
+    <div class="login-card">
+      <div class="login-logo">nom-nom</div>
+      <a class="login-domain" href="https://sh-development.ru" target="_blank" rel="noopener">sh-development.ru</a>
+      <a class="login-btn" href="/login">войти</a>
+    </div>
+  </div>
+  <div class="app-about">
+    <p>Считает калории и БЖУ по фото или описанию еды. Ведет учет калорий и отслеживает изменения веса.</p>
+  </div>
+  <div class="login-divider">
+    <span class="login-divider-dot"></span>
+  </div>
+</div>
+
+{{end}}
+
+<script src="/script.js"></script>
+</body>
+</html>
