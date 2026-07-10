@@ -13,8 +13,9 @@ Environment=AUTH_INTERNAL=http://localhost:8886
 Environment=APP_URL=https://food-scaner.sh-development.ru
 Environment=APP_TOKEN=
 Environment=SECRET_KEY=
-Environment=ANTHROPIC_API_KEY=
-Environment=SCAN_MODEL=claude-sonnet-4-6
+Environment=AI_PROXY_URL=https://auth-proxy.sh-development.ru/nom-nom-ai
+Environment=AI_PROXY_SECRET=
+Environment=SCAN_MODEL=claude-opus-4-8
 
 Restart=always
 RestartSec=5

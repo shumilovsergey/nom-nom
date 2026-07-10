@@ -109,7 +109,7 @@ if (profileBtn) {
   function drawHistory() {
     const wrap = document.getElementById('history-rows');
     if (!MEALS.length) {
-      wrap.innerHTML = `<div class="empty">Пока нет приёмов — добавь первый сверху.</div>`;
+      wrap.innerHTML = `<div class="empty">Вы еще не ном-ном сегодня</div>`;
       return;
     }
     wrap.innerHTML = MEALS.map(m => `
@@ -194,7 +194,7 @@ if (profileBtn) {
           <button class="edit" data-day="${w.day}" data-kg="${w.kg.toFixed(1)}">Изменить</button>
         </span>
       </div>`).join('')
-      : `<div class="empty">Записей пока нет — история накопится день за днём.</div>`;
+      : `<div class="empty">Записей пока нет</div>`;
   }
 
   async function wLoadGraph() {

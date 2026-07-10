@@ -10,4 +10,4 @@ go/tmp/
 *.env
 build/.env
 skeleton
-old-version
+old-versionbin/nom-nom

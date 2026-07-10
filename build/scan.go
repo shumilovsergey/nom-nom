@@ -13,18 +13,24 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
-
-const claudeAPI = "https://api.anthropic.com/v1/messages"
 
 // defaultScanModel is only a fallback — the model is read from SCAN_MODEL at startup
 // so every Claude model can be A/B tested without a rebuild.
 const defaultScanModel = "claude-opus-4-8"
 
 var scanModel = defaultScanModel // set from env in main()
+
+// aiProxyURL / aiProxySecret point at our proxy-project, which holds the real
+// Anthropic key and forwards the Messages payload byte-for-byte. nom-nom never
+// sees the Anthropic key; it authenticates to the proxy with a shared secret.
+// Both are set from env in main() (AI_PROXY_URL / AI_PROXY_SECRET).
+var (
+	aiProxyURL    string
+	aiProxySecret string
+)
 
 var errNoCredits = errors.New("no credits")
 
@@ -75,9 +81,8 @@ const scanTimeout = 20 * time.Second
 // reply. The context ties the upstream call to the HTTP request: if the browser
 // gives up and aborts, the Claude call is canceled too instead of burning tokens.
 func scanWithClaude(ctx context.Context, content []map[string]any) (*ScanResult, error) {
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("ANTHROPIC_API_KEY not set")
+	if aiProxyURL == "" || aiProxySecret == "" {
+		return nil, fmt.Errorf("AI_PROXY_URL / AI_PROXY_SECRET not set")
 	}
 
 	payload := map[string]any{
@@ -93,10 +98,9 @@ func scanWithClaude(ctx context.Context, content []map[string]any) (*ScanResult,
 	defer cancel()
 
 	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, "POST", claudeAPI, bytes.NewReader(body))
+	req, _ := http.NewRequestWithContext(ctx, "POST", aiProxyURL, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
+	req.Header.Set("Authorization", "Bearer "+aiProxySecret)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

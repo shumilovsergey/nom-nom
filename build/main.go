@@ -114,6 +114,9 @@ func main() {
 		scanModel = m
 	}
 
+	aiProxyURL = os.Getenv("AI_PROXY_URL")
+	aiProxySecret = os.Getenv("AI_PROXY_SECRET")
+
 	initDB()
 
 	// Admin CLI (run inside the container / on the server): nom-nom --set-role <auth_id> pro
