@@ -222,7 +222,7 @@ if (profileBtn) {
     if (!W || !H) return; // panel hidden — redrawn on tab open
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-    const padX = 8, padTop = 18, padBottom = 22;
+    const padX = 8, padTop = 28, padBottom = 28; // room for label bubbles at peaks/valleys
     const values = wPoints.map(p => p.kg);
     const min = Math.min(...values), max = Math.max(...values);
     const span = (max - min) || 1;
@@ -256,7 +256,7 @@ if (profileBtn) {
       const prev = wPts[i - 1], next = wPts[i + 1];
       const ref = prev || next; // undefined only for a lone point → default to above
       const below = ref && ((ref.y + (next || prev).y) / 2) < p.y; // neighbours higher → line hugs the top
-      const ly = below ? Math.min(H - 4, p.y + 17) : Math.max(10, p.y - 11);
+      const ly = below ? Math.min(H - 4, p.y + 21) : Math.max(12, p.y - 15); // clear of the dot
       return dot +
         `<text class="w-dot-lbl" text-anchor="${anchor}" x="${p.x}" y="${ly}">${p.kg.toFixed(1)}</text>`;
     }).join('');
