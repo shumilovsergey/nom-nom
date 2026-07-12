@@ -109,7 +109,7 @@
       <button data-period="year">Год</button>
     </nav>
 
-    <!-- b) graph — grows to fill free space; scrub to inspect points -->
+    <!-- b) graph — grows to fill free space; each point shows its kg inline -->
     <section class="card graph" id="w-graph-card">
       <svg id="w-chart">
         <g id="w-grid"></g>
@@ -117,13 +117,8 @@
         <polyline id="w-curve" fill="none" stroke="var(--accent)" stroke-width="2.5"
                   stroke-linejoin="round" stroke-linecap="round" points=""/>
         <g id="w-dots"></g>
-        <g id="w-selection"></g>
       </svg>
       <div class="graph-x" id="w-xaxis"></div>
-      <div class="tip" id="w-tip">
-        <div class="tip-date" id="w-tip-date"></div>
-        <div class="tip-val"><span class="tip-dot"></span><span id="w-tip-kg"></span></div>
-      </div>
       <div class="w-nodata" id="w-nodata" hidden>Нет записей за этот период</div>
     </section>
 

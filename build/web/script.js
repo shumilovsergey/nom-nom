@@ -172,7 +172,6 @@ if (profileBtn) {
   let wPeriod = 'week';
   let wPoints = [];      // fetched graph points [{day, kg}]
   let wPts = [];         // plotted geometry { x, y, kg, day }
-  let wChartBottom = 0;  // baseline y for the scrub guide line
 
   // 'YYYY-MM-DD' → Date without UTC-parsing pitfalls
   const wDate = day => { const [y, m, d] = day.split('-').map(Number); return new Date(y, m - 1, d); };
@@ -185,10 +184,11 @@ if (profileBtn) {
     const input = document.getElementById('w-input');
     if (todays && document.activeElement !== input) input.value = todays.kg.toFixed(1);
 
-    const past = WEIGHTS.filter(w => w.day !== TODAY);
-    document.getElementById('w-rows').innerHTML = past.length ? past.map(w => `
-      <div class="w-row">
-        <span class="date">${wFmt(w.day)}</span>
+    // today is listed as the top row too (editable from the table like any day),
+    // in addition to the big input card above the head
+    document.getElementById('w-rows').innerHTML = WEIGHTS.length ? WEIGHTS.map(w => `
+      <div class="w-row${w.day === TODAY ? ' today' : ''}">
+        <span class="date">${w.day === TODAY ? 'Сегодня' : wFmt(w.day)}</span>
         <span class="kg-cell">
           <span class="kg">${w.kg.toFixed(1)}</span>
           <button class="edit" data-day="${w.day}" data-kg="${w.kg.toFixed(1)}">Изменить</button>
@@ -210,10 +210,9 @@ if (profileBtn) {
   function wDrawChart() {
     const svg = document.getElementById('w-chart');
     const nodata = document.getElementById('w-nodata');
-    wClearSelection();
     nodata.hidden = wPoints.length > 0;
     if (!wPoints.length) {
-      ['w-grid', 'w-dots', 'w-selection', 'w-xaxis'].forEach(id => document.getElementById(id).innerHTML = '');
+      ['w-grid', 'w-dots', 'w-xaxis'].forEach(id => document.getElementById(id).innerHTML = '');
       document.getElementById('w-curve').setAttribute('points', '');
       document.getElementById('w-area').setAttribute('points', '');
       return;
@@ -224,7 +223,6 @@ if (profileBtn) {
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
     const padX = 8, padTop = 18, padBottom = 22;
-    wChartBottom = H - padBottom;
     const values = wPoints.map(p => p.kg);
     const min = Math.min(...values), max = Math.max(...values);
     const span = (max - min) || 1;
@@ -243,79 +241,23 @@ if (profileBtn) {
     document.getElementById('w-curve').setAttribute('points', line);
     document.getElementById('w-area').setAttribute('points',
       `${wPts[0].x},${H} ${line} ${wPts[wPts.length - 1].x},${H}`);
-    document.getElementById('w-dots').innerHTML = wPts.map(p =>
-      `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.5"/>`
+
+    // thin out dots' value labels & x-axis ticks together when the row gets crowded
+    const every = wPoints.length > 8 ? 2 : 1;
+    // dots + a dim, always-on kg value above each (no need to press-and-hold to read it)
+    document.getElementById('w-dots').innerHTML = wPts.map((p, i) =>
+      `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.5"/>` +
+      (i % every ? '' :
+        `<text class="w-dot-lbl" x="${p.x}" y="${p.y - 10}">${p.kg.toFixed(1)}</text>`)
     ).join('');
 
     // x labels: weekdays / dates / months; thin out when the row gets crowded
     const lbl = d => wPeriod === 'week' ? wDate(d).toLocaleDateString('ru-RU', { weekday: 'short' })
                : wPeriod === 'year' ? wDate(d).toLocaleDateString('ru-RU', { month: 'short' })
                : wFmt(d);
-    const every = wPoints.length > 8 ? 2 : 1;
     document.getElementById('w-xaxis').innerHTML =
       wPoints.map((p, i) => `<span>${i % every ? '' : lbl(p.day)}</span>`).join('');
   }
-
-  // ── scrub: snap to the nearest dot, show the tooltip ──
-  function wSelectPoint(i) {
-    const p = wPts[i];
-    if (!p) return;
-    document.getElementById('w-selection').innerHTML =
-      `<line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${wChartBottom}" ` +
-      `stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 4"/>` +
-      `<circle cx="${p.x}" cy="${p.y}" r="7" fill="var(--accent)" stroke="var(--bg)" stroke-width="3"/>`;
-
-    const tip = document.getElementById('w-tip');
-    document.getElementById('w-tip-date').textContent = wFmt(p.day);
-    document.getElementById('w-tip-kg').textContent = p.kg.toFixed(1) + ' кг';
-    tip.classList.add('show');
-
-    // position near the dot, relative to the graph card (SVG lacks offsetLeft/Top)
-    const graph = document.getElementById('w-graph-card');
-    const gr = graph.getBoundingClientRect();
-    const sr = document.getElementById('w-chart').getBoundingClientRect();
-    const dotLeft = (sr.left - gr.left) + p.x;
-    const dotTop = (sr.top - gr.top) + p.y;
-    const tipW = tip.offsetWidth, tipH = tip.offsetHeight, gap = 14;
-    const minL = tipW / 2 + 6, maxL = graph.clientWidth - tipW / 2 - 6;
-    tip.style.left = Math.max(minL, Math.min(maxL, dotLeft)) + 'px';
-    let top = dotTop - gap - tipH;
-    if (top < 4) top = dotTop + gap;
-    tip.style.top = top + 'px';
-  }
-
-  function wClearSelection() {
-    document.getElementById('w-selection').innerHTML = '';
-    document.getElementById('w-tip').classList.remove('show');
-  }
-
-  // Scrub is press-and-hold (graf.md §6): the tooltip lives only while a finger
-  // or the mouse is on the chart — release/leave clears it.
-  (function wAttachScrub() {
-    const svg = document.getElementById('w-chart');
-    let scrubbing = false;
-    const nearest = clientX => {
-      const rect = svg.getBoundingClientRect();
-      const x = clientX - rect.left;
-      let best = 0, bestD = Infinity;
-      wPts.forEach((p, i) => {
-        const d = Math.abs(p.x - x);
-        if (d < bestD) { bestD = d; best = i; }
-      });
-      return best;
-    };
-    const scrub = e => { if (wPts.length) wSelectPoint(nearest(e.clientX)); };
-    svg.addEventListener('pointerdown', e => {
-      scrubbing = true;
-      svg.setPointerCapture(e.pointerId);
-      scrub(e);
-    });
-    svg.addEventListener('pointermove', scrub); // drag-scrub + hover on desktop
-    const end = () => { scrubbing = false; wClearSelection(); };
-    svg.addEventListener('pointerup', end);
-    svg.addEventListener('pointercancel', end);
-    svg.addEventListener('pointerleave', () => { if (!scrubbing) wClearSelection(); });
-  })();
 
   // ── save today / edit a past day ──
   async function wSave(kg, day) {

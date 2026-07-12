@@ -446,25 +446,17 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   min-height: 23px; /* reserve the label line pre-fetch — the snap measures before data arrives */
 }
 .graph-x span { color: var(--text-muted); font-size: 12px; }
+/* always-on kg value above each dot — deliberately dim so it reads as a quiet annotation */
+.w-dot-lbl {
+  fill: var(--text-muted); opacity: 0.55; font-size: 10px; font-weight: 600;
+  text-anchor: middle; font-variant-numeric: tabular-nums; pointer-events: none;
+}
 .w-nodata {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--text-muted); font-size: 14px;
-  pointer-events: none; /* an info layer — never block the chart's scrub */
+  pointer-events: none; /* an info layer — never block taps on the chart */
 }
 .w-nodata[hidden] { display: none; } /* display:flex above would override [hidden] */
-
-/* tooltip shown while scrubbing the chart */
-.tip {
-  position: absolute; left: 0; top: 0; transform: translateX(-50%);
-  background: var(--surface-alt); border-radius: 14px; padding: 10px 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  pointer-events: none; opacity: 0; transition: opacity 0.12s ease;
-  white-space: nowrap; z-index: 2;
-}
-.tip.show { opacity: 1; }
-.tip-date { color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-.tip-val { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; }
-.tip-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
 
 /* ── today input (editable "row 1", above the table head) ── */
 .today-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
@@ -519,6 +511,7 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   padding: 16px var(--pad); border-bottom: 1px solid var(--line);
 }
 .w-row:last-child { border-bottom: none; }
+.w-row.today .date { color: var(--accent); font-weight: 700; } /* today stands out in the table */
 .w-row .date { font-size: 16px; }
 .w-row .kg-cell { display: flex; align-items: center; gap: 6px; }
 .w-row .kg { font-size: 16px; font-weight: 600; }
