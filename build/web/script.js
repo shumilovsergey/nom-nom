@@ -245,7 +245,8 @@ if (profileBtn) {
     // thin out dots' value labels & x-axis ticks together when the row gets crowded
     const every = wPoints.length > 8 ? 2 : 1;
     // dots + a dim, always-on kg value near each (no need to press-and-hold to read it)
-    document.getElementById('w-dots').innerHTML = wPts.map((p, i) => {
+    const dotsG = document.getElementById('w-dots');
+    dotsG.innerHTML = wPts.map((p, i) => {
       const dot = `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.5"/>`;
       if (i % every) return dot;
       // anchor edge labels inward so they never clip past the chart's sides
@@ -259,6 +260,20 @@ if (profileBtn) {
       return dot +
         `<text class="w-dot-lbl" text-anchor="${anchor}" x="${p.x}" y="${ly}">${p.kg.toFixed(1)}</text>`;
     }).join('');
+    // punch a bg "pill" behind each label so the curve breaks around it and the
+    // number reads on top — sized to the glyphs' real box (any anchor) + padding
+    const SVGNS = 'http://www.w3.org/2000/svg', lblPadX = 6, lblPadY = 4;
+    dotsG.querySelectorAll('.w-dot-lbl').forEach(t => {
+      const b = t.getBBox();
+      const r = document.createElementNS(SVGNS, 'rect');
+      r.setAttribute('class', 'w-dot-lbl-bg');
+      r.setAttribute('x', (b.x - lblPadX).toFixed(1));
+      r.setAttribute('y', (b.y - lblPadY).toFixed(1));
+      r.setAttribute('width', (b.width + lblPadX * 2).toFixed(1));
+      r.setAttribute('height', (b.height + lblPadY * 2).toFixed(1));
+      r.setAttribute('rx', '5');
+      t.parentNode.insertBefore(r, t); // above the curve (whole group is), below the text
+    });
 
     // x labels: weekdays / dates / months; thin out when the row gets crowded
     const lbl = d => wPeriod === 'week' ? wDate(d).toLocaleDateString('ru-RU', { weekday: 'short' })

@@ -450,11 +450,10 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 .w-dot-lbl {
   fill: var(--text-muted); fill-opacity: 0.8; font-size: 10px; font-weight: 600;
   font-variant-numeric: tabular-nums; pointer-events: none;
-  /* knockout halo: a bg-coloured stroke drawn behind the glyphs keeps the number
-     readable where the curve passes near it. Only the fill is dimmed, not the halo. */
-  stroke: var(--bg); stroke-width: 3px; stroke-opacity: 1; paint-order: stroke;
   /* text-anchor is set per-label in JS (start/middle/end) so edge values don't clip */
 }
+/* bg pill drawn behind each label (in JS) — breaks the curve so the number pops forward */
+.w-dot-lbl-bg { fill: var(--bg); }
 .w-nodata {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--text-muted); font-size: 14px;
