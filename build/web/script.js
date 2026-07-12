@@ -244,12 +244,21 @@ if (profileBtn) {
 
     // thin out dots' value labels & x-axis ticks together when the row gets crowded
     const every = wPoints.length > 8 ? 2 : 1;
-    // dots + a dim, always-on kg value above each (no need to press-and-hold to read it)
-    document.getElementById('w-dots').innerHTML = wPts.map((p, i) =>
-      `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.5"/>` +
-      (i % every ? '' :
-        `<text class="w-dot-lbl" x="${p.x}" y="${p.y - 10}">${p.kg.toFixed(1)}</text>`)
-    ).join('');
+    // dots + a dim, always-on kg value near each (no need to press-and-hold to read it)
+    document.getElementById('w-dots').innerHTML = wPts.map((p, i) => {
+      const dot = `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.5"/>`;
+      if (i % every) return dot;
+      // anchor edge labels inward so they never clip past the chart's sides
+      const anchor = i === 0 ? 'start' : i === wPts.length - 1 ? 'end' : 'middle';
+      // put the label on the side the line runs away from — above peaks, below
+      // valleys — so the curve doesn't cut straight through the digits
+      const prev = wPts[i - 1], next = wPts[i + 1];
+      const ref = prev || next; // undefined only for a lone point → default to above
+      const below = ref && ((ref.y + (next || prev).y) / 2) < p.y; // neighbours higher → line hugs the top
+      const ly = below ? Math.min(H - 4, p.y + 17) : Math.max(10, p.y - 11);
+      return dot +
+        `<text class="w-dot-lbl" text-anchor="${anchor}" x="${p.x}" y="${ly}">${p.kg.toFixed(1)}</text>`;
+    }).join('');
 
     // x labels: weekdays / dates / months; thin out when the row gets crowded
     const lbl = d => wPeriod === 'week' ? wDate(d).toLocaleDateString('ru-RU', { weekday: 'short' })
