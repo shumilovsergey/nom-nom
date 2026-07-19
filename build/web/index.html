@@ -7,10 +7,10 @@
   <meta name="apple-mobile-web-app-title" content="nom-nom" />
   <meta name="theme-color" content="#15110E" />
   <title>nom-nom</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.svg?v={{.Version}}" type="image/svg+xml" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="nom-nom" />
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v={{.Version}}" />
 </head>
 <body>
 
@@ -335,6 +335,6 @@
 
 {{end}}
 
-<script src="/script.js"></script>
+<script src="/script.js?v={{.Version}}"></script>
 </body>
 </html>

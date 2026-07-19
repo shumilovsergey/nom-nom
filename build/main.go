@@ -28,8 +28,9 @@ var (
 )
 
 type pageData struct {
-	User  *User
-	Error string
+	User    *User
+	Error   string
+	Version string // buildTime — cache-bust token for static assets (?v=)
 }
 
 func initTemplate() {
@@ -64,7 +65,7 @@ func logMiddleware(next http.Handler) http.Handler {
 // cacheStatic wraps a handler with a 30-day immutable cache header.
 func cacheStatic(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "public, max-age=2592000") // 30 days
+		w.Header().Set("Cache-Control", "public, max-age=2592000, immutable") // 30 days; URL is busted per-deploy via ?v=
 		h.ServeHTTP(w, r)
 	})
 }
@@ -85,7 +86,9 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if uid := sessionUserID(r); uid != 0 {
 		user, _ = getUserByID(uid)
 	}
-	tmpl.Execute(w, pageData{User: user}) //nolint:errcheck
+	// HTML must always revalidate so the fresh ?v= asset token reaches the browser.
+	w.Header().Set("Cache-Control", "no-cache")
+	tmpl.Execute(w, pageData{User: user, Version: buildTime}) //nolint:errcheck
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -135,9 +138,9 @@ func main() {
 	mux.HandleFunc("GET /login", handleLogin)
 	mux.HandleFunc("GET /logout", handleLogout)
 	mux.HandleFunc("GET /apps", handleOpenApps)
-	mux.Handle("GET /favicon.svg", fileServer)
-	mux.Handle("GET /style.css", fileServer)
-	mux.Handle("GET /script.js", fileServer)
+	mux.Handle("GET /favicon.svg", cacheStatic(fileServer))
+	mux.Handle("GET /style.css", cacheStatic(fileServer))
+	mux.Handle("GET /script.js", cacheStatic(fileServer))
 
 	// nom-nom app API — all behind requireAuth (so sessionUserID is always set).
 	api := func(h http.HandlerFunc) http.Handler { return requireAuth(h) }
