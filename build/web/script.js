@@ -55,6 +55,7 @@ if (profileBtn) {
 
   async function loadState() {
     const s = await api('GET', '/api/state');
+    const prevDay = TODAY;
     MEALS = s.meals || [];
     FAVORITES = s.favorites || [];
     DONUT = s.donut || { kcal: 0, prot: 0 };
@@ -69,7 +70,36 @@ if (profileBtn) {
     drawToday();
     wDrawPanel();
     snapTableToBottom();
+    // A silently emptied donut/history reads like data loss — name it.
+    if (prevDay && TODAY && prevDay !== TODAY) toast('Новый день');
   }
+
+  // ── MSK day rollover ────────────────────────────────────────────────────────
+  // Nothing fires server-side at midnight: every query re-evaluates
+  // date('now','+3 hours'), so the server is already correct the moment the day
+  // turns. Only the client's snapshot goes stale — so the client re-asks, at the
+  // two moments that actually occur: the tab coming back (the common case — phone
+  // locked overnight) and a midnight timer (never trust it alone; mobile freezes
+  // background timers and a sleeping device fires nothing).
+  let refreshPending = false;
+  const sheetOpen = () => document.getElementById('overlay').classList.contains('show');
+
+  function refreshDay() {
+    if (sheetOpen()) { refreshPending = true; return; } // don't yank a half-typed meal
+    loadState().catch(() => {});
+  }
+
+  // Arm for the next MSK (UTC+3) midnight, then re-arm off a freshly computed
+  // target — setInterval(24h) accumulates drift.
+  function armMidnight() {
+    const msk = Date.now() + 3 * 3600e3;
+    const delay = 864e5 - (msk % 864e5) + 2000; // +2s to land safely past the boundary
+    setTimeout(() => { refreshDay(); armMidnight(); }, delay);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshDay();
+  });
 
   // ── today's donut: two rings (calories outer, protein inner) ──
   // 100% = the personal goal. Past the goal the base ring stays full and a second
@@ -360,6 +390,7 @@ if (profileBtn) {
     document.getElementById('overlay').classList.remove('show');
     editingId = null;
     addingFromScan = false;
+    if (refreshPending) { refreshPending = false; loadState().catch(() => {}); }
   }
 
   // Dismissing (X / backdrop) an AI-scanned card must not lose it — the scan
@@ -683,4 +714,5 @@ if (profileBtn) {
   drawToday();
   requestAnimationFrame(snapTableToBottom);
   loadState().catch(e => toast(e.message));
+  armMidnight();
 })();
