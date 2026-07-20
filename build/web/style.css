@@ -247,6 +247,9 @@ body {
   border-bottom: 1px solid var(--line); transition: border-color 0.15s;
 }
 .field-name:focus { border-bottom-color: var(--accent); }
+/* a saved meal is read-only — drop the "typeable" cues so it reads as a record */
+.overlay.locked .field-name { border-bottom-color: transparent; }
+.overlay.locked input { cursor: default; }
 .field-name::placeholder { color: var(--text-muted); }
 .kcal-wrap {
   display: flex; align-items: center; background: var(--surface-alt);

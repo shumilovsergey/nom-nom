@@ -371,6 +371,8 @@ if (profileBtn) {
   let editingId = null;       // null = adding a new meal
   let addingFromScan = false; // card prefilled by an AI scan — tokens already spent
 
+  const MEAL_FIELDS = ['m-name', 'm-kcal', 'm-grams', 'm-prot', 'm-fat', 'm-carb'];
+
   function openMeal(meal) {
     editingId = meal && meal.id ? meal.id : null;
     addingFromScan = false; // scan handlers flip this on right after opening
@@ -383,6 +385,10 @@ if (profileBtn) {
     g('m-carb').value = meal && meal.carb != null ? meal.carb : '';
     g('meal-fav').classList.toggle('on', !!(meal && meal.fav));
     g('meal-del').style.display = editingId ? 'flex' : 'none';
+    // Once eaten, a meal is a record: values are frozen, only the star still moves
+    // (and delete, if it was wrong). Keeps the meal↔favorite name link from drifting.
+    MEAL_FIELDS.forEach(id => { g(id).readOnly = !!editingId; });
+    document.getElementById('overlay').classList.toggle('locked', !!editingId);
     document.getElementById('overlay').classList.add('show');
   }
 
@@ -428,6 +434,31 @@ if (profileBtn) {
       closeMeal();
       await loadState();
     } catch (e) { toast(e.message); }
+  }
+
+  // Star on an existing meal writes through immediately — the user expects the
+  // library to change the moment they tap, without confirming the card. A new or
+  // scanned meal has no row yet, so its star still rides along with saveMeal /
+  // dismissMeal.
+  async function toggleMealFav(e) {
+    const btn = e.currentTarget;
+    const on = !btn.classList.contains('on');
+    btn.classList.toggle('on', on);
+    if (!editingId) return;
+    const data = mealPayload();
+    try {
+      if (on) {
+        await api('POST', '/api/favorite', data);
+      } else {
+        // the name is frozen in this card, so it still matches the favorite
+        const f = FAVORITES.find(x => x.name === data.name);
+        if (f) await api('DELETE', `/api/favorite/${f.id}`);
+      }
+      await loadState(); // repaint the history stars behind the card, refresh FAVORITES
+    } catch (err) {
+      btn.classList.toggle('on', !on); // the write failed — don't leave a lying star
+      toast(err.message);
+    }
   }
 
   async function deleteMeal() {
@@ -681,7 +712,7 @@ if (profileBtn) {
   document.getElementById('meal-close').addEventListener('click', dismissMeal);
   document.getElementById('meal-save').addEventListener('click', saveMeal);
   document.getElementById('meal-del').addEventListener('click', deleteMeal);
-  document.getElementById('meal-fav').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+  document.getElementById('meal-fav').addEventListener('click', toggleMealFav);
   document.getElementById('overlay').addEventListener('click', e => {
     if (e.target.id === 'overlay') dismissMeal();
   });
