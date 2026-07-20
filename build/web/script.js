@@ -441,10 +441,11 @@ if (profileBtn) {
   }
 
   // ── favorites picker (pick one saved meal -> eat it today) ──
-  let favSelected = null; // index into FAVORITES, or null
+  let favSelected = null; // favorite id, or null — an id survives filtering, an index would not
 
   function openFav() {
     favSelected = null;
+    document.getElementById('fav-search').value = '';
     drawFav();
     document.getElementById('overlay-fav').classList.add('show');
   }
@@ -455,17 +456,25 @@ if (profileBtn) {
       rows.innerHTML = `<div class="empty">Избранного пока нет — отметь блюдо звездой ★.</div>`;
       return;
     }
-    rows.innerHTML = FAVORITES.map((f, i) => `
-      <div class="fav-row${i === favSelected ? ' sel' : ''}" data-i="${i}">
+    const q = document.getElementById('fav-search').value.trim().toLowerCase();
+    const list = q ? FAVORITES.filter(f => f.name.toLowerCase().includes(q)) : FAVORITES;
+    if (!list.length) {
+      rows.innerHTML = `<div class="empty">Ничего не найдено.</div>`;
+      return;
+    }
+    rows.innerHTML = list.map(f => `
+      <div class="fav-row${f.id === favSelected ? ' sel' : ''}" data-id="${f.id}">
         <span class="fname">${esc(f.name)}</span>
         <span class="fg">${f.grams} г</span>
         <span class="fk">${Number(f.kcal).toLocaleString()}</span>
       </div>`).join('');
   }
 
+  function selectedFav() { return FAVORITES.find(f => f.id === favSelected) || null; }
+
   async function deleteFav() {
-    if (favSelected == null) { toast('Сначала выбери блюдо'); return; }
-    const f = FAVORITES[favSelected];
+    const f = selectedFav();
+    if (!f) { toast('Сначала выбери блюдо'); return; }
     try {
       await api('DELETE', `/api/favorite/${f.id}`);
       favSelected = null;
@@ -475,8 +484,8 @@ if (profileBtn) {
   }
 
   async function acceptFav() {
-    if (favSelected == null) { toast('Сначала выбери блюдо'); return; }
-    const f = FAVORITES[favSelected];
+    const f = selectedFav();
+    if (!f) { toast('Сначала выбери блюдо'); return; }
     try {
       await api('POST', '/api/meal', {
         name: f.name, kcal: f.kcal, grams: f.grams, prot: f.prot, fat: f.fat, carb: f.carb,
@@ -563,9 +572,10 @@ if (profileBtn) {
   document.getElementById('fav-rows').addEventListener('click', e => {
     const row = e.target.closest('.fav-row');
     if (!row) return;
-    favSelected = Number(row.dataset.i);
+    favSelected = Number(row.dataset.id);
     drawFav();
   });
+  document.getElementById('fav-search').addEventListener('input', drawFav);
   document.getElementById('fav-accept').addEventListener('click', acceptFav);
   document.getElementById('fav-del').addEventListener('click', deleteFav);
   document.getElementById('overlay-fav').addEventListener('click', e => {

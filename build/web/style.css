@@ -242,8 +242,11 @@ body {
 
 .field-name {
   width: 100%; border: none; outline: none; background: transparent;
-  color: var(--text); font-size: 26px; font-weight: 700; padding: 4px 0;
+  color: var(--text); font-size: 26px; font-weight: 700; padding: 4px 0 9px;
+  /* underline marks it as typeable — same cue as the favorites search cell */
+  border-bottom: 1px solid var(--line); transition: border-color 0.15s;
 }
+.field-name:focus { border-bottom-color: var(--accent); }
 .field-name::placeholder { color: var(--text-muted); }
 .kcal-wrap {
   display: flex; align-items: center; background: var(--surface-alt);
@@ -308,6 +311,24 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--line);
 }
 .fav-head span:nth-child(n+2) { text-align: right; }
+/* the "Блюдо" cell doubles as the search box — the glyph is the only hint that it's typeable */
+.fav-search-cell {
+  display: flex; align-items: center; gap: 7px; min-width: 0; cursor: text;
+  /* the underline is paid for with negative margin so the header row keeps its height */
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px; margin-bottom: -5px;
+  transition: border-color 0.15s;
+}
+.fav-search-cell:focus-within { border-bottom-color: var(--accent); }
+.fav-search-cell svg {
+  width: 13px; height: 13px; flex: none; color: var(--caramel); transition: color 0.15s;
+}
+.fav-search-cell:focus-within svg { color: var(--accent); }
+.fav-search-cell #fav-search {
+  min-width: 0; width: 100%; background: none; border: none; outline: none; padding: 0;
+  font: inherit; color: var(--text); text-transform: inherit; letter-spacing: inherit;
+}
+.fav-search-cell #fav-search::placeholder { color: var(--caramel); opacity: 1; }
 .fav-rows { max-height: 48vh; overflow-y: auto; }
 .fav-row { cursor: pointer; border-bottom: 1px solid var(--line); }
 .fav-row:last-child { border-bottom: none; }

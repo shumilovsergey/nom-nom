@@ -287,7 +287,17 @@
       <span style="width:42px"></span>
     </div>
     <div class="fav-table">
-      <div class="fav-head"><span>Блюдо</span><span>Граммы</span><span>ккал</span></div>
+      <div class="fav-head">
+        <label class="fav-search-cell" for="fav-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-4.2-4.2" />
+          </svg>
+          <input id="fav-search" type="text" placeholder="Блюдо" autocomplete="off"
+                 spellcheck="false" aria-label="Поиск по избранному" />
+        </label>
+        <span>Граммы</span><span>ккал</span>
+      </div>
       <div class="fav-rows" id="fav-rows"></div>
     </div>
     <div class="sheet-actions">
