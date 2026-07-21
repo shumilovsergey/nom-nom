@@ -328,6 +328,6 @@ func statusLabel(s Status) string {
 	case "tester":
 		return fmt.Sprintf("Тестер · %d/день", s.DailyLimit)
 	default:
-		return fmt.Sprintf("Бесплатно · %d осталось", s.FreeScansLeft)
+		return fmt.Sprintf("AI сканов: %d", s.FreeScansLeft)
 	}
 }
