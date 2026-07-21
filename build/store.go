@@ -58,6 +58,10 @@ type Goals struct {
 	Prot int `json:"prot"`
 }
 
+// freeScansDefault is how many lifetime free AI ops a brand-new `free` user starts
+// with. Set from FREE_SCANS in main(); applied by the trigger in app_db.go.
+var freeScansDefault = 3
+
 // Status is the per-user scan economy, stored on the users row.
 type Status struct {
 	Role          string `json:"role"` // free | tester | pro

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -119,6 +120,16 @@ func main() {
 
 	aiProxyURL = os.Getenv("AI_PROXY_URL")
 	aiProxySecret = os.Getenv("AI_PROXY_SECRET")
+
+	// Free AI ops granted to a new user. Must be set before initDB() — appMigrate()
+	// bakes it into the users AFTER INSERT trigger.
+	if v := os.Getenv("FREE_SCANS"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 {
+			log.Fatalf("FREE_SCANS must be a non-negative integer, got %q", v)
+		}
+		freeScansDefault = n
+	}
 
 	initDB()
 

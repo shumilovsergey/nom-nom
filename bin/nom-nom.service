@@ -16,6 +16,7 @@ Environment=SECRET_KEY=
 Environment=AI_PROXY_URL=https://auth-proxy.sh-development.ru/nom-nom-ai
 Environment=AI_PROXY_SECRET=
 Environment=SCAN_MODEL=claude-opus-4-8
+Environment=FREE_SCANS=3
 
 Restart=always
 RestartSec=5

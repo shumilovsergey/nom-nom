@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // app_db.go — app-specific database migrations for nom-nom (food scanner).
 // initDB() (db.go) calls appMigrate() after the core users table is ready.
 //
@@ -11,7 +13,7 @@ package main
 //
 // Per-user scan economy lives on the users row as three extra columns:
 //   role             free | tester | pro
-//   free_scans_left  lifetime free AI ops for a `free` user (default 3)
+//   free_scans_left  lifetime free AI ops for a `free` user (FREE_SCANS, default 3)
 //   daily_limit      AI ops/day for a `tester` (default 10)
 //
 // Personal daily targets (the donut's 100% mark, set via the gear sheet):
@@ -29,6 +31,21 @@ func appMigrate() error {
 		`ALTER TABLE users ADD COLUMN goal_prot INTEGER NOT NULL DEFAULT 120`,
 	} {
 		db.Exec(alter) //nolint:errcheck — ok if column already exists
+	}
+
+	// New users get freeScansDefault (FREE_SCANS) lifetime free AI ops. The INSERT
+	// lives in db.go (shared infra, not ours to edit) and the column DEFAULT above is
+	// baked in at CREATE time, so we apply the configured value with an AFTER INSERT
+	// trigger, recreated on every boot to pick up the current env value. Existing rows
+	// are untouched — changing FREE_SCANS only affects users who sign up afterwards.
+	if _, err := db.Exec(fmt.Sprintf(`
+		DROP TRIGGER IF EXISTS users_free_scans_default;
+		CREATE TRIGGER users_free_scans_default AFTER INSERT ON users
+		BEGIN
+			UPDATE users SET free_scans_left = %d WHERE id = NEW.id;
+		END;
+	`, freeScansDefault)); err != nil {
+		return err
 	}
 
 	_, err := db.Exec(`
